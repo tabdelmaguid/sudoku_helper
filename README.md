@@ -1,20 +1,19 @@
 # sudoku_helper
 
-FIXME: description
+A program created while learning Clojure.
 
-## Installation
-
-Download from http://example.com/FIXME.
+The program starts with a blank board, where all digits 1-9 are available in all cells.
+As the user selects numbers in cells, the available options in other cells are reduced accordingly.
+The program, currently, uses a very basic possibility reduction logic. It may evolve with more sophisticated
+logic.
 
 ## Usage
-
-FIXME: explanation
 
     $ java -jar sudoku_helper-0.1.0-standalone.jar [args]
 
 ## Options
 
-FIXME: listing of options this app accepts.
+None
 
 ## Examples
 
@@ -23,10 +22,6 @@ FIXME: listing of options this app accepts.
 ### Bugs
 
 ...
-
-### Any Other Sections
-### That You Think
-### Might be Useful
 
 ## License
 
