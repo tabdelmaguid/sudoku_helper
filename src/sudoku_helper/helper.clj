@@ -70,6 +70,9 @@
        %)
     board))
 
+(defn guess-single-show [board]
+  board)
+
 (defn iterate-until-no-change [board fun]
   (let [new-board (fun board)]
     (if (= new-board board)

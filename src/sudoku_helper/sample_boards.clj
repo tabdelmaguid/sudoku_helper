@@ -9,6 +9,17 @@
      [ - 4 - 7 - - - 2 - ]
      [ - 2 - 6 - - - - 3 ] ])
 
+(def board2
+  '[ [ 8 - - - - - - - - ]
+     [ - - - - - - - - - ]
+     [ - - - 8 - - - - - ]
+     [ - - - - - - - - - ]
+     [ - - - - - - - - - ]
+     [ - - - - - - 8 - - ]
+     [ - - - - - - - - - ]
+     [ - - - - - - - - - ]
+     [ - - - - - - - - 8 ] ])
+
 (defn to-cell [ch]
   (if (integer? ch)
     {:type :input
@@ -19,4 +30,4 @@
 (defn to-cell-board [flat-board]
   (mapv
     #(mapv to-cell %)
-    board1))
+    flat-board))
