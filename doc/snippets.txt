@@ -1,0 +1,9 @@
+(require '[clojure.tools.namespace.repl :refer [refresh]])
+
+(clojure.tools.namespace.repl/refresh)
+
+(defn refresh []
+  (load-file "src/sudoku_helper/helper.clj")
+  (load-file "src/sudoku_helper/board.clj")
+  (require '[sudoku-helper.helper :refer :all])
+  (require '[sudoku-helper.board :refer :all]))
