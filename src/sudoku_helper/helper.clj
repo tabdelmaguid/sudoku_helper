@@ -5,26 +5,26 @@
   {:type :possibilities
    :value (range 1 10)})
 
-(defn input-vals [cells]
+(defn known-vals [cells]
   (->> cells
-    (filter #(= (:type %) :input))
+    (filter #(#{:input :guess} (:type %)))
     (map :value)
     set))
 
-(defn row-inputs [board row-index]
-  (input-vals
+(defn row-knowns [board row-index]
+  (known-vals
     (board row-index)))
 
-(defn column-inputs [board column-index]
-  (input-vals
+(defn column-knowns [board column-index]
+  (known-vals
     (map #(nth % column-index) board)))
 
-(defn subgrid-inputs [board row-index column-index]
+(defn subgrid-knowns [board row-index column-index]
   (let [rows (nth (partition 3 board) (quot row-index 3))]
     (reduce
       (fn [res row]
         (let [part (nth (partition 3 row) (quot column-index 3))]
-          (set/union res (input-vals part))))
+          (set/union res (known-vals part))))
       #{}
       rows)))
 
@@ -33,19 +33,23 @@
 (defn reduce-possibilties [board row-index col-index cell]
   (cond
     (= (:type cell) :input)
-    cell
+      cell
     :else (let [determined-vals (set/union
-                                  (row-inputs board row-index)
-                                  (column-inputs board col-index)
-                                  (subgrid-inputs board row-index col-index))
+                                  (row-knowns board row-index)
+                                  (column-knowns board col-index)
+                                  (subgrid-knowns board row-index col-index))
                 remaining-digits (set/difference all-digits determined-vals)]
-            (if (= 1 (count remaining-digits))
-              {:type :guess
-               :value (first remaining-digits)}
-              {:type :possibilities
-               :value remaining-digits}))))
+            (cond
+              (= 0 (count remaining-digits))
+                cell
+              (= 1 (count remaining-digits))
+                {:type :guess
+                 :value (first remaining-digits)}
+              :else
+                {:type :possibilities
+                 :value remaining-digits}))))
 
-(defn remove-used-digits [board]
+(defn remove-known-digits [board]
   (vec
     (map-indexed
       (fn [i row]
@@ -66,10 +70,20 @@
        %)
     board))
 
+(defn iterate-until-no-change [board fun]
+  (let [new-board (fun board)]
+    (if (= new-board board)
+      board
+      (recur new-board fun))))
+
+(defn enhance-board-step [board]
+  (-> board
+    remove-known-digits))
+
 (defn enhance-board [board]
   (-> board
     remove-guesses
-    remove-used-digits))
+    (iterate-until-no-change enhance-board-step)))
 
 (defn accept-input [board row col input-str]
   (enhance-board
