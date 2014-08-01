@@ -175,8 +175,6 @@
 
 (defn iterate-until-no-change [board fun]
   (let [new-board (fun board)]
-    (prn "board     " board)
-    (prn "new-board " new-board)
     (if (= new-board board)
       board
       (recur new-board fun))))
