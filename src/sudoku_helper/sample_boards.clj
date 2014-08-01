@@ -25,7 +25,7 @@
     {:type :input
      :value ch}
     {:type :possibilities
-     :value (range 1 10)}))
+     :value (set (range 1 10))}))
 
 (defn to-cell-board [flat-board]
   (mapv

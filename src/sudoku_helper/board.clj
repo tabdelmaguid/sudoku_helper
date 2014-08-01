@@ -126,10 +126,11 @@
 (defn update-grid [board]
   (ss/config! grid :items (grid-content board)))
 
-(defn main-window (ss/frame :title "Sudoku Helper"
-                            :content grid
-                            :width 600
-                            :height 600))
+(defn main-window []
+  (ss/frame :title "Sudoku Helper"
+            :content grid
+            :width 600
+            :height 600))
 
 (defn display-board []
   (ss/native!)

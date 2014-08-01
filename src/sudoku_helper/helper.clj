@@ -1,9 +1,15 @@
 (ns sudoku-helper.helper
   (:require [clojure.set :as set]))
 
+(def all-values (set (range 1 10)))
+
 (def init-cell
   {:type :possibilities
-   :value (range 1 10)})
+   :value all-values})
+
+(defn guess-cell-of [val]
+  {:type :guess
+   :value val})
 
 (defn known-vals [cells]
   (->> cells
@@ -32,7 +38,7 @@
 
 (defn reduce-possibilties [board row-index col-index cell]
   (cond
-    (= (:type cell) :input)
+    (#{:input :guess} (:type cell))
       cell
     :else (let [determined-vals (set/union
                                   (row-knowns board row-index)
@@ -70,18 +76,115 @@
        %)
     board))
 
+(defn cell-indexes-matching [section pred]
+  (second
+    (reduce
+      (fn [[index result] val]
+        [(inc index) (if (pred val)
+                       (conj result index)
+                       result)])
+      [0 #{}]
+      section)))
+
+(defn cell-indexes-containing [section val]
+  (cell-indexes-matching
+    section
+    (fn [cell]
+      (and
+        (= (:type cell) :possibilities)
+        ((:value cell) val)))))
+
+(defn guess-single-show-on-section [section]
+  (let [value-in-cells
+         (map
+           (fn [val] (cell-indexes-containing section val))
+           all-values)
+        values-to-indexes (zipmap all-values value-in-cells)
+        values-in-unique-cells
+          (filter
+            (fn [[val indexes]] (= 1 (count indexes)))
+            values-to-indexes)]
+    (reduce
+      (fn [section [val cells-indexes]]
+        (assoc-in section [(first cells-indexes)] (guess-cell-of val)))
+      section
+      values-in-unique-cells)))
+
+(defn guess-single-show-on-rows [board]
+  (mapv
+    #(guess-single-show-on-section %)
+    board))
+
+(defn get-column [board column-index]
+  (vec (nth (apply map vector board) column-index)))
+
+(defn set-col [board col col-index]
+  (reduce
+    (fn [board row-index]
+      (assoc-in board [row-index col-index] (col row-index)))
+    board
+    (range (count board))))
+
+(defn guess-single-show-on-col [board col-index]
+  (let [col (get-column board col-index)
+        guessed-col (guess-single-show-on-section col)]
+    (set-col board col col-index)))
+
+(defn guess-single-show-on-columns [board]
+  (reduce
+    (fn [board index]
+      (guess-single-show-on-col board index))
+    board
+    (range (count (ffirst board)))))
+
+(defn get-subgrid [board index]
+  (let [subgrid-row-index (quot index 3)
+        subgrid-col-index (mod index 3)
+        subgrid-rows (nth (partition 3 board) subgrid-row-index)]
+    (vec
+      (mapcat
+        #(nth (partition 3 %) subgrid-col-index)
+        subgrid-rows))))
+
+(defn set-subgrid [board subgrid index]
+  (reduce
+    (fn [board cell-index]
+      (let [row (+ (* 3 (quot index 3)) (quot cell-index 3))
+            col (+ (* 3 (mod index 3)) (mod cell-index 3))]
+        (assoc-in board [row col] (subgrid cell-index))))
+    board
+    (range (count board))))
+
+(defn guess-single-show-on-subgrid [board index]
+  (let [subgrid (get-subgrid board index)
+        guessed-subgrid (guess-single-show-on-section subgrid)]
+    (set-subgrid board guessed-subgrid index)))
+
+(defn guess-single-show-on-subgrids [board]
+  (reduce
+    (fn [board index]
+      (guess-single-show-on-subgrid board index))
+    board
+    (range (count board))))
+
 (defn guess-single-show [board]
-  board)
+  (-> board
+    guess-single-show-on-rows
+    guess-single-show-on-columns
+    guess-single-show-on-subgrids))
 
 (defn iterate-until-no-change [board fun]
   (let [new-board (fun board)]
+    (prn "board     " board)
+    (prn "new-board " new-board)
     (if (= new-board board)
       board
       (recur new-board fun))))
 
 (defn enhance-board-step [board]
   (-> board
-    remove-known-digits))
+    remove-known-digits
+    guess-single-show))
 
 (defn enhance-board [board]
   (-> board
