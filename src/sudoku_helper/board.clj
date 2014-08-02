@@ -83,7 +83,10 @@
     (ss/listen button
       :action (fn [e]
                 (ss/alert (str "You clicked on " (:value cell) ", which is a " (:type cell)
-                               ", at " [row col]))))
+                               ", at " [row col])))
+      :key-typed (fn [e]
+                   (let [board (swap! sudoku-board clear-cell row col)]
+                     (update-grid board))))
     button))
 
 (defn cell-grid [cell row col]
