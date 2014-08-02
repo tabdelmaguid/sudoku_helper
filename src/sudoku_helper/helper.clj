@@ -167,21 +167,23 @@
     board
     (range (count board))))
 
-(defn guess-single-show [board]
-  (-> board
-    guess-single-show-on-rows
-    guess-single-show-on-columns
-    guess-single-show-on-subgrids))
-
 (defn iterate-until-no-change [board fun]
   (let [new-board (fun board)]
     (if (= new-board board)
       board
       (recur new-board fun))))
 
+(defn guess-single-show [board]
+  (-> board
+    (iterate-until-no-change remove-known-digits)
+    guess-single-show-on-rows
+    (iterate-until-no-change remove-known-digits)
+    guess-single-show-on-columns
+    (iterate-until-no-change remove-known-digits)
+    guess-single-show-on-subgrids))
+
 (defn enhance-board-step [board]
   (-> board
-    remove-known-digits
     guess-single-show))
 
 (defn enhance-board [board]
@@ -195,4 +197,7 @@
       [row col]
       {:type :input
        :value input-str})))
+
+(defn clear-cell [board row col]
+  (enhance-board (assoc-in board [row col] init-cell)))
 
