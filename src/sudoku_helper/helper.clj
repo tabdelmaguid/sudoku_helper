@@ -11,9 +11,26 @@
   {:type :guess
    :value val})
 
+(defn known-cell [cell]
+  (#{:input :guess} (:type cell)))
+
+(defn map-on-board [board fun]
+  (mapv #(mapv fun %) board))
+
+(defn cell-value-str [cell]
+  (format "%9s"
+    (if (known-cell cell)
+      (:value cell)
+      (apply str (:value cell)))))
+
+(defn print-board-vals [board]
+  (let [board-vals (map-on-board board cell-value-str)
+        with-nl (interpose "\n" board-vals)]
+    (println with-nl)))
+
 (defn known-vals [cells]
   (->> cells
-    (filter #(#{:input :guess} (:type %)))
+    (filter known-cell)
     (map :value)
     set))
 
@@ -128,14 +145,14 @@
 (defn guess-single-show-on-col [board col-index]
   (let [col (get-column board col-index)
         guessed-col (guess-single-show-on-section col)]
-    (set-col board col col-index)))
+    (set-col board guessed-col col-index)))
 
 (defn guess-single-show-on-columns [board]
   (reduce
     (fn [board index]
       (guess-single-show-on-col board index))
     board
-    (range (count (ffirst board)))))
+    (range (count (first board)))))
 
 (defn get-subgrid [board index]
   (let [subgrid-row-index (quot index 3)

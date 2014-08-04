@@ -7,3 +7,9 @@
   (load-file "src/sudoku_helper/board.clj")
   (require '[sudoku-helper.helper :refer :all])
   (require '[sudoku-helper.board :refer :all]))
+
+(defn reft []
+  (do (load-file "src/sudoku_helper/helper.clj")
+    (load-file "test/sudoku_helper/helper_test.clj")
+    (require '[sudoku-helper.helper :refer :all])
+    (require '[sudoku-helper.helper-test :refer :all])))

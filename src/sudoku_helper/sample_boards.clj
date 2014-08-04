@@ -1,3 +1,15 @@
+(defn to-cell [ch]
+  (if (integer? ch)
+    {:type :input
+     :value ch}
+    {:type :possibilities
+     :value (set (range 1 10))}))
+
+(defn to-cell-board [flat-board]
+  (mapv
+    #(mapv to-cell %)
+    flat-board))
+
 (def board1
   '[ [ 3 - - - - 5 - 1 - ]
      [ - 7 - - - 6 - 3 - ]
@@ -20,14 +32,13 @@
      [ - - - - - - - - - ]
      [ - - - - - - - - 8 ] ])
 
-(defn to-cell [ch]
-  (if (integer? ch)
-    {:type :input
-     :value ch}
-    {:type :possibilities
-     :value (set (range 1 10))}))
-
-(defn to-cell-board [flat-board]
-  (mapv
-    #(mapv to-cell %)
-    flat-board))
+(def board3
+  '[ [ - - - - - - - - 6 ]
+     [ - - - - - 6 - - - ]
+     [ - - 6 - - - - - - ]
+     [ - - - - - - - 6 - ]
+     [ - - - - 6 - - - - ]
+     [ - 6 - - - - - - - ]
+     [ - - - 6 - - - - - ]
+     [ - - - - - - - - - ]
+     [ - - - - - - 6 - - ] ])

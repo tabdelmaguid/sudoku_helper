@@ -4,6 +4,23 @@
 
 (load "sample_boards")
 
+(deftest test-set-column
+  (testing "Set column should modify board"
+    (let [new-col (vec (repeat 9 init-cell))
+          old-board (to-cell-board board2)
+          new-board (set-col old-board new-col 0)]
+      (is (= new-col
+             (get-column new-board 0))))))
+
+(deftest test-guess-single-show-on-column
+  (testing "Guess single show on columns correctly"
+    (let [cell-board (to-cell-board board3)
+          removed-knowns (remove-known-digits cell-board)
+          guessed-board  (guess-single-show-on-col removed-knowns 0)]
+      (is (= {:type :guess
+              :value 6}
+             (get-in guessed-board [7 0]))))))
+
 (deftest test-guess-value
   (testing "If a values shows in one cell in a row, it changes to a guess on that row"
     (let [row (cons
