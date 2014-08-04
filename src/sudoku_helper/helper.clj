@@ -1,11 +1,13 @@
 (ns sudoku-helper.helper
   (:require [clojure.set :as set]))
 
-(def all-values (set (range 1 10)))
+(def cell-range (range 9))
+
+(def all-possibilities (set (range 1 10)))
 
 (def init-cell
   {:type :possibilities
-   :value all-values})
+   :value all-possibilities})
 
 (defn guess-cell-of [val]
   {:type :guess
@@ -115,8 +117,8 @@
   (let [value-in-cells
          (map
            (fn [val] (cell-indexes-containing section val))
-           all-values)
-        values-to-indexes (zipmap all-values value-in-cells)
+           all-possibilities)
+        values-to-indexes (zipmap all-possibilities value-in-cells)
         values-in-unique-cells
           (filter
             (fn [[val indexes]] (= 1 (count indexes)))
@@ -203,10 +205,42 @@
   (-> board
     guess-single-show))
 
+(defn all-rows [board] board)
+
+(defn all-columns [board]
+  (for [index cell-range]
+    (get-column board index)))
+
+(defn all-subgrids [board]
+  (for [index cell-range]
+    (get-subgrid board index)))
+
+(defn all-sections [board]
+  (concat
+    (all-rows board)
+    (all-columns board)
+    (all-subgrids board)))
+
+(defn is-valid-section [section]
+  (let [known-cells (filter known-cell section)
+        known-vals (set (map :value known-cells))]
+    (= (count known-cells) (count known-vals))))
+
+(defn is-valid-board [board]
+  (every?
+    is-valid-section
+    (all-sections board)))
+
+(defn check-validity [board]
+  (if (not (is-valid-board board))
+    (prn "Board is not valid"))
+  board)
+
 (defn enhance-board [board]
   (-> board
     remove-guesses
-    (iterate-until-no-change enhance-board-step)))
+    (iterate-until-no-change enhance-board-step)
+    check-validity))
 
 (defn accept-input [board row col input-str]
   (enhance-board

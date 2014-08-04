@@ -81,9 +81,6 @@
                           :foreground (if (= (:type cell) :guess)
                                               :blue))]
     (ss/listen button
-      :action (fn [e]
-                (ss/alert (str "You clicked on " (:value cell) ", which is a " (:type cell)
-                               ", at " [row col])))
       :key-typed (fn [e]
                    (let [board (swap! sudoku-board clear-cell row col)]
                      (update-grid board))))
