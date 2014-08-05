@@ -141,30 +141,14 @@
       section
       values-in-unique-cells)))
 
-(defn guess-single-show-on-rows [board]
-  (mapv
-    #(guess-single-show-on-section %)
-    board))
 
 (defn get-column [board column-index]
   (vec (nth (apply map vector board) column-index)))
 
-(defn set-col [board col col-index]
+(defn set-column [board col-index column]
   (reduce
     (fn [board row-index]
-      (assoc-in board [row-index col-index] (col row-index)))
-    board
-    cell-range))
-
-(defn guess-single-show-on-col [board col-index]
-  (let [col (get-column board col-index)
-        guessed-col (guess-single-show-on-section col)]
-    (set-col board guessed-col col-index)))
-
-(defn guess-single-show-on-columns [board]
-  (reduce
-    (fn [board index]
-      (guess-single-show-on-col board index))
+      (assoc-in board [row-index col-index] (column row-index)))
     board
     cell-range))
 
@@ -177,7 +161,7 @@
         #(nth (partition 3 %) subgrid-col-index)
         subgrid-rows))))
 
-(defn set-subgrid [board subgrid index]
+(defn set-subgrid [board index subgrid]
   (reduce
     (fn [board cell-index]
       (let [row (+ (* 3 (quot index 3)) (quot cell-index 3))
@@ -186,25 +170,47 @@
     board
     cell-range))
 
-(defn guess-single-show-on-subgrid [board index]
-  (let [subgrid (get-subgrid board index)
-        guessed-subgrid (guess-single-show-on-section subgrid)]
-    (set-subgrid board guessed-subgrid index)))
+(defn get-row [board index] (board index))
 
-(defn guess-single-show-on-subgrids [board]
+(defn set-row [board index row]
+  (assoc board index row))
+
+(def section-types
+  {:row     [get-row set-row]
+   :column  [get-column set-column]
+   :subgrid [get-subgrid set-subgrid]})
+
+(defn guess-single-show-on-section-and-reduce [board index section-type]
+  (let [[getter setter] (get section-types section-type)
+        section (getter board index)
+        guessed-section (guess-single-show-on-section section)]
+    (if (= section guessed-section)
+      board
+      (-> board
+        (setter index guessed-section)
+        remove-known-digits))))
+
+(defn guess-single-show-on-section-type [board section-type]
   (reduce
     (fn [board index]
-      (guess-single-show-on-subgrid board index))
+        (guess-single-show-on-section-and-reduce board index section-type))
     board
     cell-range))
+
+(defn guess-single-show-on-rows [board]
+  (guess-single-show-on-section-type board :row))
+
+(defn guess-single-show-on-columns [board]
+  (guess-single-show-on-section-type board :column))
+
+(defn guess-single-show-on-subgrids [board]
+  (guess-single-show-on-section-type board :subgrid))
 
 (defn guess-single-show [board]
   (-> board
     remove-known-digits
     guess-single-show-on-rows
-    remove-known-digits
     guess-single-show-on-columns
-    remove-known-digits
     guess-single-show-on-subgrids))
 
 (defn enhance-board-step [board]

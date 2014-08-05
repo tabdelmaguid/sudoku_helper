@@ -127,7 +127,7 @@
 
 (defn update-grid [board]
   (ss/config! grid :items (grid-content board))
-  (if (not (is-valid-board board))
+  (if (not (is-valid-board? board))
     (ss/alert "Board is not valid!")))
 
 (defn main-window []

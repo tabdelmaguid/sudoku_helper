@@ -8,7 +8,7 @@
   (testing "Set column should modify board"
     (let [new-col (vec (repeat 9 init-cell))
           old-board (to-cell-board board2)
-          new-board (set-col old-board new-col 0)]
+          new-board (set-column old-board 0 new-col)]
       (is (= new-col
              (get-column new-board 0))))))
 
@@ -16,7 +16,7 @@
   (testing "Guess single show on columns correctly"
     (let [cell-board (to-cell-board board3)
           removed-knowns (remove-known-digits cell-board)
-          guessed-board  (guess-single-show-on-col removed-knowns 0)]
+          guessed-board  (guess-single-show-on-section-and-reduce removed-knowns 0 :column)]
       (is (= {:type :guess
               :value 6}
              (get-in guessed-board [7 0]))))))
