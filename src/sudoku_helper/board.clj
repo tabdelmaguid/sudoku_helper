@@ -65,6 +65,10 @@
   (let [board (swap! sudoku-board accept-input row col digit)]
     (update-grid board)))
 
+(defn clear-cell-input [board row col]
+  (let [board (swap! sudoku-board clear-cell row col)]
+    (update-grid board)))
+
 (defn digit-button [text row col]
   (let [button (ss/button :text text)]
     (when (integer? text)
@@ -81,9 +85,7 @@
                           :foreground (if (= (:type cell) :guess)
                                               :blue))]
     (ss/listen button
-      :key-typed (fn [e]
-                   (let [board (swap! sudoku-board clear-cell row col)]
-                     (update-grid board))))
+      :key-typed (fn [_] (clear-cell-input sudoku-board row col)))
     button))
 
 (defn cell-grid [cell row col]
@@ -124,7 +126,9 @@
     :items (grid-content @sudoku-board)))
 
 (defn update-grid [board]
-  (ss/config! grid :items (grid-content board)))
+  (ss/config! grid :items (grid-content board))
+  (if (not (is-valid-board board))
+    (ss/alert "Board is not valid!")))
 
 (defn main-window []
   (ss/frame :title "Sudoku Helper"
