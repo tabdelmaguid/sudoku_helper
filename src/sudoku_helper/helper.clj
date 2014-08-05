@@ -19,6 +19,12 @@
 (defn map-on-board [board fun]
   (mapv #(mapv fun %) board))
 
+(defn iterate-until-no-change [board fun]
+  (let [new-board (fun board)]
+    (if (= new-board board)
+      board
+      (recur new-board fun))))
+
 (defn cell-value-str [cell]
   (format "%9s"
     (if (known-cell cell)
@@ -74,7 +80,7 @@
                 {:type :possibilities
                  :value remaining-digits}))))
 
-(defn remove-known-digits [board]
+(defn remove-known-digits-step [board]
   (vec
     (map-indexed
       (fn [i row]
@@ -84,6 +90,9 @@
               (reduce-possibilties board i j cell))
             row)))
       board)))
+
+(defn remove-known-digits [board]
+  (iterate-until-no-change board remove-known-digits-step))
 
 (defn remove-guesses [board]
   (mapv
@@ -186,19 +195,13 @@
     board
     (range (count board))))
 
-(defn iterate-until-no-change [board fun]
-  (let [new-board (fun board)]
-    (if (= new-board board)
-      board
-      (recur new-board fun))))
-
 (defn guess-single-show [board]
   (-> board
-    (iterate-until-no-change remove-known-digits)
+    remove-known-digits
     guess-single-show-on-rows
-    (iterate-until-no-change remove-known-digits)
+    remove-known-digits
     guess-single-show-on-columns
-    (iterate-until-no-change remove-known-digits)
+    remove-known-digits
     guess-single-show-on-subgrids))
 
 (defn enhance-board-step [board]
