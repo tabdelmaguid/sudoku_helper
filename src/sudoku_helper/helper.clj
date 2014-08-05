@@ -13,7 +13,11 @@
   {:type :guess
    :value val})
 
-(defn known-cell [cell]
+(defn available-cell-of [possibilities]
+  {:type :possibilities
+   :value possibilities})
+
+(defn known-cell? [cell]
   (#{:input :guess} (:type cell)))
 
 (defn map-on-board [board fun]
@@ -27,7 +31,7 @@
 
 (defn cell-value-str [cell]
   (format "%9s"
-    (if (known-cell cell)
+    (if (known-cell? cell)
       (:value cell)
       (apply str (:value cell)))))
 
@@ -38,7 +42,7 @@
 
 (defn known-vals [cells]
   (->> cells
-    (filter known-cell)
+    (filter known-cell?)
     (map :value)
     set))
 
@@ -59,26 +63,25 @@
       #{}
       rows)))
 
-(def all-digits (set (range 1 10)))
+(defn collect-determined-vals-around [board row-index column-index]
+  (set/union
+    (row-knowns board row-index)
+    (column-knowns board column-index)
+    (subgrid-knowns board row-index column-index)))
 
-(defn reduce-possibilties [board row-index col-index cell]
+(defn reduce-possibilties [board row-index column-index cell]
   (cond
-    (#{:input :guess} (:type cell))
+    (known-cell? cell)
       cell
-    :else (let [determined-vals (set/union
-                                  (row-knowns board row-index)
-                                  (column-knowns board col-index)
-                                  (subgrid-knowns board row-index col-index))
-                remaining-digits (set/difference all-digits determined-vals)]
+    :else (let [determined-vals (collect-determined-vals-around board row-index column-index)
+                remaining-digits (set/difference all-possibilities determined-vals)]
             (cond
               (= 0 (count remaining-digits))
                 cell
               (= 1 (count remaining-digits))
-                {:type :guess
-                 :value (first remaining-digits)}
+                (guess-cell-of (first remaining-digits))
               :else
-                {:type :possibilities
-                 :value remaining-digits}))))
+                (available-cell-of remaining-digits)))))
 
 (defn remove-known-digits-step [board]
   (vec
@@ -151,7 +154,7 @@
     (fn [board row-index]
       (assoc-in board [row-index col-index] (col row-index)))
     board
-    (range (count board))))
+    cell-range))
 
 (defn guess-single-show-on-col [board col-index]
   (let [col (get-column board col-index)
@@ -163,7 +166,7 @@
     (fn [board index]
       (guess-single-show-on-col board index))
     board
-    (range (count (first board)))))
+    cell-range))
 
 (defn get-subgrid [board index]
   (let [subgrid-row-index (quot index 3)
@@ -181,7 +184,7 @@
             col (+ (* 3 (mod index 3)) (mod cell-index 3))]
         (assoc-in board [row col] (subgrid cell-index))))
     board
-    (range (count board))))
+    cell-range))
 
 (defn guess-single-show-on-subgrid [board index]
   (let [subgrid (get-subgrid board index)
@@ -193,7 +196,7 @@
     (fn [board index]
       (guess-single-show-on-subgrid board index))
     board
-    (range (count board))))
+    cell-range))
 
 (defn guess-single-show [board]
   (-> board
@@ -225,17 +228,17 @@
     (all-subgrids board)))
 
 (defn is-valid-section [section]
-  (let [known-cells (filter known-cell section)
+  (let [known-cells (filter known-cell? section)
         known-vals (set (map :value known-cells))]
     (= (count known-cells) (count known-vals))))
 
-(defn is-valid-board [board]
+(defn is-valid-board? [board]
   (every?
     is-valid-section
     (all-sections board)))
 
 (defn check-validity [board]
-  (if (not (is-valid-board board))
+  (if (not (is-valid-board? board))
     (prn "Board is not valid"))
   board)
 
