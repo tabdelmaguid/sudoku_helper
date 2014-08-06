@@ -77,22 +77,24 @@
                 remaining-digits (set/difference all-possibilities determined-vals)]
             (cond
               (= 0 (count remaining-digits))
-                cell
+                  (guess-cell-of -1)
               (= 1 (count remaining-digits))
                 (guess-cell-of (first remaining-digits))
               :else
                 (available-cell-of remaining-digits)))))
 
+(def all-cell-indexes
+  (for [row cell-range
+        column cell-range]
+    [row column]))
+
 (defn remove-known-digits-step [board]
-  (vec
-    (map-indexed
-      (fn [i row]
-        (vec
-          (map-indexed
-            (fn [j cell]
-              (reduce-possibilties board i j cell))
-            row)))
-      board)))
+  (reduce
+    (fn [board [row column]]
+      (let [new-cell (reduce-possibilties board row column (get-in board [row column]))]
+        (assoc-in board [row column] new-cell)))
+    board
+    all-cell-indexes))
 
 (defn remove-known-digits [board]
   (iterate-until-no-change board remove-known-digits-step))
