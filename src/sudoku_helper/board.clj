@@ -1,6 +1,7 @@
 (ns sudoku-helper.board
   (:require [seesaw.core :as ss]
             [seesaw.border :as ssb]
+            [seesaw.keymap :as sskm]
             [sudoku-helper.helper :refer :all]))
 
 (load "sample_boards")
@@ -73,10 +74,7 @@
   (let [button (ss/button :text text)]
     (when (integer? text)
       (ss/listen button
-        :action (fn [e]
-                  (digit-selection row col text))
-        :key-typed (fn [e]
-                         (prn e))))
+        :action (fn [e] (digit-selection row col text))))
     button))
 
 (defn cell-button [cell row col]
@@ -131,10 +129,13 @@
     (ss/alert "Board is not valid!")))
 
 (defn main-window []
-  (ss/frame :title "Sudoku Helper"
-            :content grid
-            :width 600
-            :height 600))
+  (let [frame
+    (ss/frame :title "Sudoku Helper"
+              :content grid
+              :width 600
+              :height 600)]
+    (sskm/map-key frame "meta W" (fn [_] (ss/dispose! frame)))
+    frame))
 
 (defn display-board []
   (ss/native!)
