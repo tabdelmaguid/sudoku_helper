@@ -69,19 +69,22 @@
     (column-knowns board column-index)
     (subgrid-knowns board row-index column-index)))
 
-(defn reduce-possibilties [board row-index column-index cell]
+(defn cell-from-possibilities [possibilities]
   (cond
-    (known-cell? cell)
-      cell
-    :else (let [determined-vals (collect-determined-vals-around board row-index column-index)
-                remaining-digits (set/difference all-possibilities determined-vals)]
-            (cond
-              (= 0 (count remaining-digits))
-                  (guess-cell-of -1)
-              (= 1 (count remaining-digits))
-                (guess-cell-of (first remaining-digits))
-              :else
-                (available-cell-of remaining-digits)))))
+    (= 0 (count possibilities))
+      (guess-cell-of -1)
+    (= 1 (count possibilities))
+      (guess-cell-of (first possibilities))
+    :else
+      (available-cell-of possibilities)))
+
+(defn reduce-possibilties [board row-index column-index]
+  (if (known-cell? (get-in board [row-index column-index]))
+    board
+    (let [determined-vals (collect-determined-vals-around board row-index column-index)
+          remaining-digits (set/difference all-possibilities determined-vals)
+          new-cell (cell-from-possibilities remaining-digits)]
+      (assoc-in board [row-index column-index] new-cell))))
 
 (def all-cell-indexes
   (for [row cell-range
@@ -91,8 +94,7 @@
 (defn remove-known-digits-step [board]
   (reduce
     (fn [board [row column]]
-      (let [new-cell (reduce-possibilties board row column (get-in board [row column]))]
-        (assoc-in board [row column] new-cell)))
+      (reduce-possibilties board row column))
     board
     all-cell-indexes))
 
