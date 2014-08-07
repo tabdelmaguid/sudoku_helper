@@ -247,16 +247,10 @@
     is-valid-section
     (all-sections board)))
 
-(defn check-validity [board]
-  (if (not (is-valid-board? board))
-    (prn "Board is not valid"))
-  board)
-
 (defn enhance-board [board]
   (-> board
     remove-guesses
-    (iterate-until-no-change enhance-board-step)
-    check-validity))
+    (iterate-until-no-change enhance-board-step)))
 
 (defn accept-input [board row col input-str]
   (enhance-board
