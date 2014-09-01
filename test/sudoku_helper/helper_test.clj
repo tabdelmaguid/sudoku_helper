@@ -42,3 +42,18 @@
             {:type :guess
              :value 8}
             (get-in board [1 7]))))))
+
+(defn same-inputs? [& boards]
+  (every?
+    (fn [[row-i col-i]]
+      (let [cell-types (map #(:type (get-in % [row-i col-i])) boards)]
+        (if (some #{:input} cell-types)
+          (apply = cell-types)
+          true)))
+    all-cell-indexes))
+
+(deftest stability-test
+  (testing "verify results of reductions are stable"
+    (let [cell-board (to-cell-board board1)
+          reduced-board (enhance-board cell-board)]
+      (is (same-inputs? cell-board reduced-board)))))
